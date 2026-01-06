@@ -1,6 +1,6 @@
 # Docusaurus LLM Docs Generator
 
-📚 **A GitHub Action to automatically generate LLM-optimized documentation from Docusaurus sites**
+**A GitHub Action to automatically generate LLM-optimized documentation from Docusaurus sites**
 
 Perfect for teams who want to make their documentation accessible to AI assistants and LLMs. Generates a structured `llms.txt` index and a `markdown.zip` archive following the format popularized by Cloudflare.
 
@@ -15,14 +15,15 @@ Perfect for teams who want to make their documentation accessible to AI assistan
 
 ## Features
 
-- 📄 **LLM-Ready Format**: Generates `llms.txt` index for AI navigation
-- 📦 **Markdown Archive**: Creates `markdown.zip` with all docs as clean markdown
-- 🔗 **Smart Link Transformation**: Converts internal links to absolute URLs
-- 🧹 **Clean Conversion**: Strips HTML/JSX, preserves code blocks and formatting
-- 📋 **Sidebar Aware**: Reads your `sidebars.js` for proper hierarchy
-- 💡 **Admonition Support**: Converts Docusaurus admonitions to GitHub alerts
-- 🚀 **Zero Config**: Works out of the box with any Docusaurus site
-- ⚡ **Fast**: Processes 50+ pages in under 2 seconds
+- **LLM-Ready Format**: Generates `llms.txt` index for AI navigation
+- **Markdown Archive**: Creates `markdown.zip` with all docs as clean markdown
+- **Automatic Sidebar Injection**: Adds "LLM Resources" links to your site's sidebar automatically
+- **Smart Link Transformation**: Converts internal links to absolute URLs
+- **Clean Conversion**: Strips HTML/JSX, preserves code blocks and formatting
+- **Sidebar Aware**: Reads your `sidebars.js` for proper hierarchy
+- **Admonition Support**: Converts Docusaurus admonitions to GitHub alerts
+- **Zero Config**: Works out of the box with any Docusaurus site
+- **Fast**: Processes 50+ pages in under 2 seconds
 
 ## Quick Start
 
@@ -119,6 +120,43 @@ After deployment, your LLM documentation is available at:
 - `https://your-site.com/llms.txt` - Navigation index for LLMs
 - `https://your-site.com/markdown.zip` - Complete docs archive
 
+The action also automatically adds an **"LLM Resources"** section to your sidebar with links to these files.
+
+## Automatic Sidebar Injection
+
+By default, the action automatically injects an "LLM Resources" section into your Docusaurus sidebar on every page. This makes the LLM documentation easily discoverable by your users.
+
+**Before (your sidebar):**
+```
+Getting Started
+API Reference
+Guides
+Examples
+```
+
+**After (automatic injection):**
+```
+Getting Started
+API Reference
+Guides
+Examples
+LLM Resources        <-- Automatically added!
+  ├── llms.txt
+  └── markdown.zip
+```
+
+### Disabling Sidebar Injection
+
+If you prefer to manually configure your sidebar, you can disable automatic injection:
+
+```yaml
+- uses: osodevops/docusaurus-llm-docs@v1
+  with:
+    base-url: 'https://docs.example.com'
+    product-name: 'My Docs'
+    inject-sidebar: 'false'
+```
+
 ## Output Example
 
 ### llms.txt
@@ -187,12 +225,13 @@ npm install your-package
 |-------|----------|---------|-------------|
 | `build-dir` | No | `./build` | Path to Docusaurus build directory |
 | `output-dir` | No | `./llm-docs` | Output directory for generated files |
-| `base-url` | ✅ Yes | - | Base URL for documentation links |
-| `product-name` | ✅ Yes | - | Product name for llms.txt header |
+| `base-url` | Yes | - | Base URL for documentation links |
+| `product-name` | Yes | - | Product name for llms.txt header |
 | `tagline` | No | `''` | Product tagline for llms.txt |
 | `sidebar-path` | No | `./sidebars.js` | Path to sidebars.js file |
 | `include-descriptions` | No | `true` | Include page descriptions in llms.txt |
 | `strip-html` | No | `true` | Remove any remaining HTML from output |
+| `inject-sidebar` | No | `true` | Automatically inject LLM Resources into sidebar |
 
 ### Action Outputs
 
@@ -249,10 +288,10 @@ Don't deploy to Pages, just create an artifact:
 
 ## Requirements
 
-- ✅ Docusaurus 2.x or 3.x site
-- ✅ Node.js 20+
-- ✅ A built Docusaurus site (`npm run build`)
-- ✅ GitHub Actions enabled
+- Docusaurus 2.x or 3.x site
+- Node.js 20+
+- A built Docusaurus site (`npm run build`)
+- GitHub Actions enabled
 
 ## How It Works
 
@@ -262,6 +301,7 @@ Don't deploy to Pages, just create an artifact:
 4. **Transform Links**: Converts internal links to absolute URLs with `.md` extensions
 5. **Generate Index**: Creates `llms.txt` with hierarchical navigation
 6. **Create Archive**: Packages all markdown files into `markdown.zip`
+7. **Inject Sidebar**: Adds "LLM Resources" links to every page's sidebar
 
 ## Troubleshooting
 
@@ -285,6 +325,13 @@ Don't deploy to Pages, just create an artifact:
 1. `base-url` matches your deployed site URL
 2. Include trailing path if using a subdirectory (e.g., `/docs`)
 
+### Sidebar not showing LLM Resources
+
+**Check:**
+1. `inject-sidebar` is not set to `false`
+2. The action runs after the Docusaurus build but before deployment
+3. Review action logs for "Injected LLM Resources sidebar into X HTML files"
+
 ## Local Development
 
 Test the action locally before deploying:
@@ -304,15 +351,16 @@ npm run build
 BUILD_DIR=/path/to/docusaurus/build \
 BASE_URL=https://example.com \
 PRODUCT_NAME="My Docs" \
+INJECT_SIDEBAR=true \
 npm start
 ```
 
 ## Security & Privacy
 
-- ✅ All processing happens in GitHub Actions
-- ✅ No external API calls or data transmission
-- ✅ Open source - audit the code yourself
-- ✅ Only reads from your build directory
+- All processing happens in GitHub Actions
+- No external API calls or data transmission
+- Open source - audit the code yourself
+- Only reads from your build directory
 
 ## Contributing
 
@@ -328,13 +376,13 @@ MIT License - see [LICENSE](LICENSE) file for details
 
 ## Support
 
-- 📖 [Documentation](https://github.com/osodevops/docusaurus-llm-docs#readme)
-- 🐛 [Report Issues](https://github.com/osodevops/docusaurus-llm-docs/issues)
-- 💬 [Discussions](https://github.com/osodevops/docusaurus-llm-docs/discussions)
+- [Documentation](https://github.com/osodevops/docusaurus-llm-docs#readme)
+- [Report Issues](https://github.com/osodevops/docusaurus-llm-docs/issues)
+- [Discussions](https://github.com/osodevops/docusaurus-llm-docs/discussions)
 
 ## Credits
 
-Built with ❤️ by [OSO DevOps](https://github.com/osodevops)
+Built by [OSO DevOps](https://github.com/osodevops)
 
 Inspired by:
 - [Cloudflare's LLM documentation format](https://developers.cloudflare.com/llms.txt)
