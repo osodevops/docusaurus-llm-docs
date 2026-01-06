@@ -1,0 +1,61 @@
+name: Generate LLM Docs (Standalone)
+
+# This workflow generates LLM docs and uploads them as artifacts
+# Useful for testing or when not deploying to GitHub Pages
+
+on:
+  workflow_dispatch:
+    inputs:
+      base-url:
+        description: 'Base URL for documentation links'
+        required: true
+        default: 'https://docs.example.com'
+      product-name:
+        description: 'Product name for llms.txt header'
+        required: true
+        default: 'My Product'
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Docusaurus site
+        run: npm run build
+
+      - name: Generate LLM documentation
+        uses: osodevops/docusaurus-llm-docs@v1
+        id: llm-docs
+        with:
+          build-dir: './build'
+          output-dir: './llm-output'
+          base-url: ${{ github.event.inputs.base-url }}
+          product-name: ${{ github.event.inputs.product-name }}
+
+      - name: Upload LLM docs artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: llm-docs
+          path: ./llm-output/
+          retention-days: 30
+
+      - name: Summary
+        run: |
+          echo "## LLM Documentation Generated" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Files generated:** ${{ steps.llm-docs.outputs.files-generated }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Sections:** ${{ steps.llm-docs.outputs.sections-count }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Download the artifact to get the generated files." >> $GITHUB_STEP_SUMMARY

@@ -1,0 +1,96 @@
+name: 'Docusaurus LLM Docs Generator'
+description: 'Generate LLM-optimized documentation from Docusaurus sites. Creates llms.txt index and markdown.zip archive for AI assistants following the Cloudflare format.'
+author: 'OSO DevOps'
+
+branding:
+  icon: 'book-open'
+  color: 'purple'
+
+inputs:
+  build-dir:
+    description: 'Path to Docusaurus build directory'
+    required: false
+    default: './build'
+
+  output-dir:
+    description: 'Output directory for LLM docs'
+    required: false
+    default: './llm-docs'
+
+  base-url:
+    description: 'Base URL for documentation links (e.g., https://docs.example.com)'
+    required: true
+
+  product-name:
+    description: 'Product name for llms.txt header'
+    required: true
+
+  tagline:
+    description: 'Product tagline for llms.txt'
+    required: false
+    default: ''
+
+  sidebar-path:
+    description: 'Path to sidebars.js file'
+    required: false
+    default: './sidebars.js'
+
+  include-descriptions:
+    description: 'Include page descriptions in llms.txt'
+    required: false
+    default: 'true'
+
+  strip-html:
+    description: 'Remove any remaining HTML from markdown output'
+    required: false
+    default: 'true'
+
+outputs:
+  llms-txt-path:
+    description: 'Path to generated llms.txt file'
+    value: ${{ steps.generate.outputs.llms_txt_path }}
+
+  markdown-zip-path:
+    description: 'Path to generated markdown.zip archive'
+    value: ${{ steps.generate.outputs.markdown_zip_path }}
+
+  files-generated:
+    description: 'Number of markdown files generated'
+    value: ${{ steps.generate.outputs.files_generated }}
+
+  sections-count:
+    description: 'Number of documentation sections'
+    value: ${{ steps.generate.outputs.sections_count }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install dependencies
+      shell: bash
+      run: npm ci
+      working-directory: ${{ github.action_path }}
+
+    - name: Build action
+      shell: bash
+      run: npm run build
+      working-directory: ${{ github.action_path }}
+
+    - name: Generate LLM docs
+      id: generate
+      shell: bash
+      run: node ${{ github.action_path }}/dist/index.js
+      env:
+        BUILD_DIR: ${{ inputs.build-dir }}
+        OUTPUT_DIR: ${{ inputs.output-dir }}
+        BASE_URL: ${{ inputs.base-url }}
+        PRODUCT_NAME: ${{ inputs.product-name }}
+        TAGLINE: ${{ inputs.tagline }}
+        SIDEBAR_PATH: ${{ inputs.sidebar-path }}
+        INCLUDE_DESCRIPTIONS: ${{ inputs.include-descriptions }}
+        STRIP_HTML: ${{ inputs.strip-html }}
+        WORKSPACE_DIR: ${{ github.workspace }}

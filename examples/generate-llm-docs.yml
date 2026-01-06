@@ -1,0 +1,82 @@
+name: Generate LLM Documentation
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'docs/**'
+      - 'docusaurus.config.js'
+      - 'sidebars.js'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: llm-docs-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  generate-and-deploy:
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Docusaurus site
+        run: npm run build
+
+      - name: Generate LLM documentation
+        uses: osodevops/docusaurus-llm-docs@v1
+        id: llm-docs
+        with:
+          build-dir: './build'
+          output-dir: './build/llm-docs'
+          base-url: 'https://your-domain.com'
+          product-name: 'Your Product'
+          tagline: 'Build amazing things with our APIs'
+          sidebar-path: './sidebars.js'
+          include-descriptions: 'true'
+          strip-html: 'true'
+
+      - name: Copy LLM docs to build root
+        run: |
+          cp ${{ steps.llm-docs.outputs.llms-txt-path }} ./build/llms.txt
+          cp ${{ steps.llm-docs.outputs.markdown-zip-path }} ./build/markdown.zip
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './build'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: Summary
+        run: |
+          echo "## LLM Documentation Generated" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Files generated:** ${{ steps.llm-docs.outputs.files-generated }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Sections:** ${{ steps.llm-docs.outputs.sections-count }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Output files" >> $GITHUB_STEP_SUMMARY
+          echo "- \`llms.txt\`: ${{ steps.deployment.outputs.page_url }}llms.txt" >> $GITHUB_STEP_SUMMARY
+          echo "- \`markdown.zip\`: ${{ steps.deployment.outputs.page_url }}markdown.zip" >> $GITHUB_STEP_SUMMARY
