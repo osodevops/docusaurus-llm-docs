@@ -1,5 +1,5 @@
 name: 'Docusaurus LLM Docs Generator'
-description: 'Generate LLM-optimized documentation from Docusaurus sites. Creates llms.txt index and markdown.zip archive for AI assistants following the Cloudflare format.'
+description: 'Generate LLM-optimized docs (llms.txt + markdown.zip) from Docusaurus sites for AI assistants.'
 author: 'OSO DevOps'
 
 branding:
