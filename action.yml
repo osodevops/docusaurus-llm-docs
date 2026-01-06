@@ -45,6 +45,11 @@ inputs:
     required: false
     default: 'true'
 
+  inject-sidebar:
+    description: 'Inject LLM Resources links into the built sidebar HTML'
+    required: false
+    default: 'true'
+
 outputs:
   llms-txt-path:
     description: 'Path to generated llms.txt file'
@@ -93,4 +98,5 @@ runs:
         SIDEBAR_PATH: ${{ inputs.sidebar-path }}
         INCLUDE_DESCRIPTIONS: ${{ inputs.include-descriptions }}
         STRIP_HTML: ${{ inputs.strip-html }}
+        INJECT_SIDEBAR: ${{ inputs.inject-sidebar }}
         WORKSPACE_DIR: ${{ github.workspace }}

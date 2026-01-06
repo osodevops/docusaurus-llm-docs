@@ -10,6 +10,7 @@ export interface Config {
     sidebarPath: string;
     includeDescriptions: boolean;
     stripHtml: boolean;
+    injectSidebar: boolean;
     workspaceDir: string;
 }
 /**

@@ -14,6 +14,7 @@ const configSchema = z.object({
   sidebarPath: z.string().default('./sidebars.js'),
   includeDescriptions: z.boolean().default(true),
   stripHtml: z.boolean().default(true),
+  injectSidebar: z.boolean().default(true),
   workspaceDir: z.string(),
 });
 
@@ -32,6 +33,7 @@ export function loadConfig(): Config {
     sidebarPath: resolvePath(process.env.SIDEBAR_PATH || './sidebars.js', workspaceDir),
     includeDescriptions: parseBool(process.env.INCLUDE_DESCRIPTIONS, true),
     stripHtml: parseBool(process.env.STRIP_HTML, true),
+    injectSidebar: parseBool(process.env.INJECT_SIDEBAR, true),
     workspaceDir,
   };
 

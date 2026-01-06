@@ -2,6 +2,7 @@ import path from 'path';
 import { loadConfig } from './utils/config.js';
 import { parseSidebar, countPages } from './parsers/sidebar-parser.js';
 import { processDocusaurusBuild, discoverPagesFromBuild } from './services/docusaurus-parser.js';
+import { injectSidebarLinks } from './services/sidebar-injector.js';
 import { generateLlmsTxt } from './generators/llms-txt.js';
 import { generateMarkdownFiles } from './generators/markdown-files.js';
 import { createMarkdownArchive } from './generators/archive.js';
@@ -111,7 +112,15 @@ async function main(): Promise<void> {
     log(`Created: markdown.zip`);
     logGroupEnd();
 
-    // 9. Set GitHub Actions outputs
+    // 9. Inject sidebar links into built HTML (if enabled)
+    if (config.injectSidebar) {
+      logGroup('Injecting LLM Resources into sidebar');
+      const injectedCount = await injectSidebarLinks(config);
+      log(`Sidebar injection complete: ${injectedCount} files updated`);
+      logGroupEnd();
+    }
+
+    // 10. Set GitHub Actions outputs
     const result: GenerationResult = {
       llmsTxtPath,
       markdownZipPath: zipPath,
@@ -125,7 +134,7 @@ async function main(): Promise<void> {
     await setOutput('files_generated', result.filesGenerated);
     await setOutput('sections_count', result.sectionsCount);
 
-    // 10. Print summary
+    // 11. Print summary
     stats.endTime = new Date();
     const duration = (stats.endTime.getTime() - stats.startTime.getTime()) / 1000;
 
