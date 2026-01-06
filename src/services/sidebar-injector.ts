@@ -4,79 +4,110 @@ import type { Config } from '../types/index.js';
 import { log, logWarning } from '../utils/logger.js';
 
 /**
- * Generate the HTML for the LLM Resources sidebar section
+ * Generate the script that injects LLM Resources into the sidebar
+ * This runs after React hydration to avoid being overwritten
  */
-function generateLlmResourcesHtml(baseUrl: string): string {
-  const externalIcon = `<svg width="12" height="12" aria-hidden="true" viewBox="0 0 24 24" class="iconExternalLink_nPIU" style="margin-left:4px"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"></path></svg>`;
+function generateInjectionScript(baseUrl: string): string {
+  const script = `
+<script>
+(function() {
+  function injectLlmResources() {
+    // Don't inject if already present
+    if (document.querySelector('[data-llm-resources]')) return;
 
-  return `<li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item"><div class="menu__list-item-collapsible"><a class="menu__link menu__link--sublist menu__link--sublist-caret" role="button" aria-expanded="true" href="#"><span title="LLM Resources" class="categoryLinkLabel_W154">LLM Resources</span></a></div><ul class="menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" href="${baseUrl}/llms.txt" target="_blank" rel="noopener noreferrer"><span title="llms.txt">llms.txt</span>${externalIcon}</a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" href="${baseUrl}/llms-full.txt" target="_blank" rel="noopener noreferrer"><span title="llms-full.txt">llms-full.txt</span>${externalIcon}</a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" href="${baseUrl}/markdown.zip" target="_blank" rel="noopener noreferrer"><span title="markdown.zip">markdown.zip</span>${externalIcon}</a></li></ul></li>`;
+    // Find the sidebar menu
+    var sidebar = document.querySelector('.theme-doc-sidebar-menu.menu__list');
+    if (!sidebar) return;
+
+    // Create the LLM Resources section
+    var li = document.createElement('li');
+    li.className = 'theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item';
+    li.setAttribute('data-llm-resources', 'true');
+
+    var externalIcon = '<svg width="12" height="12" aria-hidden="true" viewBox="0 0 24 24" class="iconExternalLink_nPIU" style="margin-left:4px"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"></path></svg>';
+
+    li.innerHTML = '<div class="menu__list-item-collapsible">' +
+      '<a class="menu__link menu__link--sublist menu__link--sublist-caret" role="button" aria-expanded="true" href="#">' +
+      '<span title="LLM Resources">LLM Resources</span></a></div>' +
+      '<ul class="menu__list">' +
+      '<li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item">' +
+      '<a class="menu__link" href="${baseUrl}/llms.txt" target="_blank" rel="noopener noreferrer">' +
+      '<span title="llms.txt">llms.txt</span>' + externalIcon + '</a></li>' +
+      '<li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item">' +
+      '<a class="menu__link" href="${baseUrl}/llms-full.txt" target="_blank" rel="noopener noreferrer">' +
+      '<span title="llms-full.txt">llms-full.txt</span>' + externalIcon + '</a></li>' +
+      '<li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item">' +
+      '<a class="menu__link" href="${baseUrl}/markdown.zip" target="_blank" rel="noopener noreferrer">' +
+      '<span title="markdown.zip">markdown.zip</span>' + externalIcon + '</a></li>' +
+      '</ul>';
+
+    sidebar.appendChild(li);
+  }
+
+  // Run after DOM is ready and React has hydrated
+  if (document.readyState === 'complete') {
+    setTimeout(injectLlmResources, 100);
+  } else {
+    window.addEventListener('load', function() {
+      setTimeout(injectLlmResources, 100);
+    });
+  }
+
+  // Also observe for SPA navigation (React re-renders)
+  var observer = new MutationObserver(function(mutations) {
+    if (!document.querySelector('[data-llm-resources]')) {
+      injectLlmResources();
+    }
+  });
+
+  // Start observing once sidebar exists
+  function startObserver() {
+    var sidebar = document.querySelector('.theme-doc-sidebar-container');
+    if (sidebar) {
+      observer.observe(sidebar, { childList: true, subtree: true });
+    } else {
+      setTimeout(startObserver, 100);
+    }
+  }
+
+  if (document.readyState === 'complete') {
+    startObserver();
+  } else {
+    window.addEventListener('load', startObserver);
+  }
+})();
+</script>`;
+
+  return script;
 }
 
 /**
- * Inject LLM Resources links into a single HTML file's sidebar
+ * Inject the script into a single HTML file
  */
-async function injectIntoHtmlFile(filePath: string, llmResourcesHtml: string): Promise<boolean> {
+async function injectIntoHtmlFile(filePath: string, script: string): Promise<boolean> {
   try {
     let content = await fs.readFile(filePath, 'utf-8');
 
-    // Find the main sidebar menu list
-    const sidebarPattern = /<ul class="theme-doc-sidebar-menu menu__list">/g;
-
-    if (!sidebarPattern.test(content)) {
-      return false; // No sidebar in this file
-    }
-
-    // Reset the regex
-    sidebarPattern.lastIndex = 0;
-
-    // Find the position after the sidebar opening tag
-    const match = sidebarPattern.exec(content);
-    if (!match) {
+    // Check if already injected
+    if (content.includes('data-llm-resources')) {
       return false;
     }
 
-    const startPos = match.index + match[0].length;
-
-    // Find the matching closing </ul> tag
-    // We need to count nested <ul> tags to find the right closing tag
-    let depth = 1;
-    let pos = startPos;
-    let closingPos = -1;
-
-    while (pos < content.length && depth > 0) {
-      const nextOpen = content.indexOf('<ul', pos);
-      const nextClose = content.indexOf('</ul>', pos);
-
-      if (nextClose === -1) {
-        break;
-      }
-
-      if (nextOpen !== -1 && nextOpen < nextClose) {
-        depth++;
-        pos = nextOpen + 3;
-      } else {
-        depth--;
-        if (depth === 0) {
-          closingPos = nextClose;
-        }
-        pos = nextClose + 5;
-      }
-    }
-
-    if (closingPos === -1) {
+    // Check if this file has a sidebar (docs pages)
+    if (!content.includes('theme-doc-sidebar')) {
       return false;
     }
 
-    // Check if LLM Resources already exists
-    if (content.includes('LLM Resources')) {
-      return false; // Already injected
+    // Inject script before closing </body> tag
+    const bodyCloseIndex = content.lastIndexOf('</body>');
+    if (bodyCloseIndex === -1) {
+      return false;
     }
 
-    // Insert the LLM Resources section before the closing </ul>
     const newContent =
-      content.slice(0, closingPos) +
-      llmResourcesHtml +
-      content.slice(closingPos);
+      content.slice(0, bodyCloseIndex) +
+      script +
+      content.slice(bodyCloseIndex);
 
     await fs.writeFile(filePath, newContent, 'utf-8');
     return true;
@@ -95,11 +126,11 @@ export async function injectSidebarLinks(config: Config): Promise<number> {
     absolute: true,
   });
 
-  const llmResourcesHtml = generateLlmResourcesHtml(config.baseUrl);
+  const script = generateInjectionScript(config.baseUrl);
   let injectedCount = 0;
 
   for (const htmlFile of htmlFiles) {
-    const injected = await injectIntoHtmlFile(htmlFile, llmResourcesHtml);
+    const injected = await injectIntoHtmlFile(htmlFile, script);
     if (injected) {
       injectedCount++;
     }

@@ -1,1 +1,1 @@
-{"version":3,"file":"sidebar-injector.d.ts","sourceRoot":"","sources":["../../src/services/sidebar-injector.ts"],"names":[],"mappings":"AAEA,OAAO,KAAK,EAAE,MAAM,EAAE,MAAM,mBAAmB,CAAC;AAsFhD;;GAEG;AACH,wBAAsB,kBAAkB,CAAC,MAAM,EAAE,MAAM,GAAG,OAAO,CAAC,MAAM,CAAC,CAkBxE"}
+{"version":3,"file":"sidebar-injector.d.ts","sourceRoot":"","sources":["../../src/services/sidebar-injector.ts"],"names":[],"mappings":"AAEA,OAAO,KAAK,EAAE,MAAM,EAAE,MAAM,mBAAmB,CAAC;AAqHhD;;GAEG;AACH,wBAAsB,kBAAkB,CAAC,MAAM,EAAE,MAAM,GAAG,OAAO,CAAC,MAAM,CAAC,CAkBxE"}
