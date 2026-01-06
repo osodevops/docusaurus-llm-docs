@@ -4,6 +4,7 @@ import { parseSidebar, countPages } from './parsers/sidebar-parser.js';
 import { processDocusaurusBuild, discoverPagesFromBuild } from './services/docusaurus-parser.js';
 import { injectSidebarLinks } from './services/sidebar-injector.js';
 import { generateLlmsTxt } from './generators/llms-txt.js';
+import { generateLlmsFullTxt } from './generators/llms-full.js';
 import { generateMarkdownFiles } from './generators/markdown-files.js';
 import { createMarkdownArchive } from './generators/archive.js';
 import { ensureDir, writeFile, fileExists } from './utils/filesystem.js';
@@ -97,14 +98,22 @@ async function main(): Promise<void> {
     log(`Generated: llms.txt`);
     logGroupEnd();
 
-    // 7. Generate markdown files
+    // 7. Generate llms-full.txt
+    logGroup('Generating llms-full.txt');
+    const llmsFullTxt = generateLlmsFullTxt(docs, config);
+    const llmsFullTxtPath = path.join(config.outputDir, 'llms-full.txt');
+    await writeFile(llmsFullTxtPath, llmsFullTxt);
+    log(`Generated: llms-full.txt`);
+    logGroupEnd();
+
+    // 8. Generate markdown files
     logGroup('Generating markdown files');
     const filesGenerated = await generateMarkdownFiles(docs, config);
     stats.filesWritten = filesGenerated;
     log(`Generated ${filesGenerated} markdown files`);
     logGroupEnd();
 
-    // 8. Create markdown.zip archive
+    // 9. Create markdown.zip archive
     logGroup('Creating markdown.zip archive');
     const markdownDir = path.join(config.outputDir, 'markdown');
     const zipPath = path.join(config.outputDir, 'markdown.zip');
@@ -112,7 +121,7 @@ async function main(): Promise<void> {
     log(`Created: markdown.zip`);
     logGroupEnd();
 
-    // 9. Inject sidebar links into built HTML (if enabled)
+    // 10. Inject sidebar links into built HTML (if enabled)
     if (config.injectSidebar) {
       logGroup('Injecting LLM Resources into sidebar');
       const injectedCount = await injectSidebarLinks(config);
@@ -120,9 +129,10 @@ async function main(): Promise<void> {
       logGroupEnd();
     }
 
-    // 10. Set GitHub Actions outputs
+    // 11. Set GitHub Actions outputs
     const result: GenerationResult = {
       llmsTxtPath,
+      llmsFullTxtPath,
       markdownZipPath: zipPath,
       markdownDir,
       filesGenerated,
@@ -130,11 +140,12 @@ async function main(): Promise<void> {
     };
 
     await setOutput('llms_txt_path', result.llmsTxtPath);
+    await setOutput('llms_full_txt_path', result.llmsFullTxtPath);
     await setOutput('markdown_zip_path', result.markdownZipPath);
     await setOutput('files_generated', result.filesGenerated);
     await setOutput('sections_count', result.sectionsCount);
 
-    // 11. Print summary
+    // 12. Print summary
     stats.endTime = new Date();
     const duration = (stats.endTime.getTime() - stats.startTime.getTime()) / 1000;
 
@@ -150,6 +161,7 @@ async function main(): Promise<void> {
     log('');
     log('  Output files:');
     log(`    - ${llmsTxtPath}`);
+    log(`    - ${llmsFullTxtPath}`);
     log(`    - ${zipPath}`);
     log(`    - ${markdownDir}/`);
     log('');

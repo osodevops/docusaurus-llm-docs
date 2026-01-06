@@ -55,6 +55,10 @@ outputs:
     description: 'Path to generated llms.txt file'
     value: ${{ steps.generate.outputs.llms_txt_path }}
 
+  llms-full-txt-path:
+    description: 'Path to generated llms-full.txt file (complete docs in one file)'
+    value: ${{ steps.generate.outputs.llms_full_txt_path }}
+
   markdown-zip-path:
     description: 'Path to generated markdown.zip archive'
     value: ${{ steps.generate.outputs.markdown_zip_path }}

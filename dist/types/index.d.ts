@@ -93,6 +93,7 @@ export interface ParsedHtmlContent {
  */
 export interface GenerationResult {
     llmsTxtPath: string;
+    llmsFullTxtPath: string;
     markdownZipPath: string;
     markdownDir: string;
     filesGenerated: number;

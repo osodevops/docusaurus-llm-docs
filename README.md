@@ -16,6 +16,7 @@ Perfect for teams who want to make their documentation accessible to AI assistan
 ## Features
 
 - **LLM-Ready Format**: Generates `llms.txt` index for AI navigation
+- **Complete Docs File**: Generates `llms-full.txt` with all documentation in one file
 - **Markdown Archive**: Creates `markdown.zip` with all docs as clean markdown
 - **Automatic Sidebar Injection**: Adds "LLM Resources" links to your site's sidebar automatically
 - **Smart Link Transformation**: Converts internal links to absolute URLs
@@ -84,6 +85,7 @@ jobs:
       - name: Copy LLM docs to build root
         run: |
           cp ${{ steps.llm-docs.outputs.llms-txt-path }} ./build/llms.txt
+          cp ${{ steps.llm-docs.outputs.llms-full-txt-path }} ./build/llms-full.txt
           cp ${{ steps.llm-docs.outputs.markdown-zip-path }} ./build/markdown.zip
 
       - name: Upload Pages artifact
@@ -117,8 +119,9 @@ Update these values in the workflow:
 ### 4. Access Your LLM Docs
 
 After deployment, your LLM documentation is available at:
-- `https://your-site.com/llms.txt` - Navigation index for LLMs
-- `https://your-site.com/markdown.zip` - Complete docs archive
+- `https://your-site.com/llms.txt` - Lightweight navigation index for LLMs
+- `https://your-site.com/llms-full.txt` - Complete documentation in a single file
+- `https://your-site.com/markdown.zip` - All docs as individual markdown files
 
 The action also automatically adds an **"LLM Resources"** section to your sidebar with links to these files.
 
@@ -176,6 +179,49 @@ Your product tagline here
 ## API Reference
 - [Authentication](https://your-site.com/api/authentication.md): API authentication guide
 - [Endpoints](https://your-site.com/api/endpoints.md): Available API endpoints
+```
+
+### llms-full.txt
+
+Complete documentation in a single file, following the Cloudflare format with `<page>` delimiters:
+
+```markdown
+# Your Product Documentation
+
+Your product tagline here
+
+> This file contains the complete documentation in a single file for LLM consumption.
+> For a lightweight index, see https://your-site.com/llms.txt
+
+<page>
+---
+title: Installation
+description: How to install
+source_url:
+  html: https://your-site.com/getting-started/installation
+  md: https://your-site.com/getting-started/installation.md
+---
+
+# Installation
+
+This guide covers installing the SDK...
+
+</page>
+
+<page>
+---
+title: Quick Start
+description: Get running in 5 minutes
+source_url:
+  html: https://your-site.com/getting-started/quick-start
+  md: https://your-site.com/getting-started/quick-start.md
+---
+
+# Quick Start
+
+Follow these steps to get started...
+
+</page>
 ```
 
 ### markdown.zip Structure
@@ -238,6 +284,7 @@ npm install your-package
 | Output | Description |
 |--------|-------------|
 | `llms-txt-path` | Path to generated llms.txt file |
+| `llms-full-txt-path` | Path to generated llms-full.txt file |
 | `markdown-zip-path` | Path to generated markdown.zip archive |
 | `files-generated` | Number of markdown files generated |
 | `sections-count` | Number of documentation sections |
@@ -300,8 +347,9 @@ Don't deploy to Pages, just create an artifact:
 3. **Convert to Markdown**: Uses Cheerio + Turndown to convert HTML to clean markdown
 4. **Transform Links**: Converts internal links to absolute URLs with `.md` extensions
 5. **Generate Index**: Creates `llms.txt` with hierarchical navigation
-6. **Create Archive**: Packages all markdown files into `markdown.zip`
-7. **Inject Sidebar**: Adds "LLM Resources" links to every page's sidebar
+6. **Generate Full Docs**: Creates `llms-full.txt` with all content in one file
+7. **Create Archive**: Packages all markdown files into `markdown.zip`
+8. **Inject Sidebar**: Adds "LLM Resources" links to every page's sidebar
 
 ## Troubleshooting
 
